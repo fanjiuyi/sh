@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans  
+    xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+    xmlns:tx="http://www.springframework.org/schema/tx"  
+    xmlns:context="http://www.springframework.org/schema/context"    
+    xmlns:mvc="http://www.springframework.org/schema/mvc"    
+    xsi:schemaLocation="http://www.springframework.org/schema/beans   
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+    http://www.springframework.org/schema/tx   
+    http://www.springframework.org/schema/tx/spring-tx-3.0.xsd  
+    http://www.springframework.org/schema/context  
+    http://www.springframework.org/schema/context/spring-context-3.0.xsd  
+    http://www.springframework.org/schema/mvc  
+    http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd" >
+	<!-- 加载MyBatis配置及数据源 -->
+	<context:property-placeholder location="classpath:init.properties" />
+
+
+	<!-- 自动扫描的包名 -->  
+    <context:component-scan base-package="com.sh.mxcy" ></context:component-scan>
+	
+	<!-- 默认的注解映射的支持 -->  
+    <mvc:annotation-driven />  
+	
+	<!-- 拦截器 -->
+    <mvc:interceptors>
+        <bean class="com.sh.mxcy.core.inteceptor.TransactionalInteceptor" />
+    </mvc:interceptors>
+
+
+	 <!-- 对静态资源文件的访问   -->
+    <!--<mvc:default-servlet-handler/>-->
+
+		<!-- 配置数据源 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"  destroy-method="close">
+			<!--<property name="driverClassName" value="${jdbc.driverClassName}" />-->
+			<!--<property name="url" value='${jdbc.url}' />-->
+			<!--<property name="username" value ="${jdbc.username}"/>-->
+			<!--<property name="password" value ="${jdbc.password} "/>-->
+
+			<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+			<property name="url" value="jdbc:mysql://47.94.5.179:3306/mxcy?useUnicode=true&amp;characterEncoding=utf-8" />
+			<property name="username" value ="mxcy"/>
+			<property name="password" value ="mxcy@123456!"/>
+
+
+		<!-- Connection Pooling Info -->
+		<property name="maxActive" value="50" />
+		<property name="maxIdle" value="100" />
+		<property name="defaultAutoCommit" value="false" />
+		<property name="timeBetweenEvictionRunsMillis" value="3600000" />
+		<property name="minEvictableIdleTimeMillis" value="3600000" />
+		</bean>
+
+	<!--MyBatis integration with Spring as define sqlSessionFactory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="mapperLocations" value="classpath:mapper/*.xml"/>
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:mybatis-configuration.xml" />
+	</bean>
+
+	<!-- 自动扫描Mapper -->
+	<bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.sh.mxcy.dao.*"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+
+		<!-- 配置事物支持 -->
+		<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">  
+		    <property name="dataSource" ref="dataSource" />  
+		</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<bean id="springContextHolder" class="com.sh.utils.core.SpringContextHolder" />
+
+	</beans> 

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sh.mxcy.dao.impl.PlanDaoImpl">
+
+    <insert id="insert" parameterType="inDBJSONObject">
+        insert into pro_plan(
+        name,
+        plan_num,
+        figure_no,
+        order_num,
+        start_time,
+        end_time,
+        type,
+        me_type,
+        status,
+        create_time,
+        is_del
+        <if test="remarks != null">,remarks</if>
+        <if test="week_num != null">,week_num</if>
+        <if test="day_num != null">,day_num</if>
+        )VALUE (
+        #{name},
+        #{plan_num},
+        #{figure_no},
+        #{order_num},
+        STR_TO_DATE(#{start_time},'%Y-%m-%d  %H:%i:%s'),
+        STR_TO_DATE(#{end_time},'%Y-%m-%d  %H:%i:%s'),
+        #{type_code},
+        #{me_type_code},
+        0,
+        NOW(),
+        0
+        <if test="remarks != null">,#{remarks}</if>
+        <if test="week_num != null">,#{week_num}</if>
+        <if test="day_num != null">,#{day_num}</if>
+        )
+
+    </insert>
+
+
+    <update id="update" parameterType="inDBJSONObject">
+        update pro_plan
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="plan_num != null">plan_num = #{plan_num},</if>
+            <if test="figure_no != null">figure_no = #{figure_no},</if>
+            <if test="order_num != null">order_num = #{order_num},</if>
+            <if test="type_code != null">type = #{type_code},</if>
+            <if test="me_type_code != null">me_type = #{me_type_code},</if>
+            <if test="week_num != null">week_num = #{week_num},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="next_workshop != null">workshop = #{next_workshop},</if>
+            <if test="day_num != null">day_num = #{day_num},</if>
+            <if test="start_time != null">start_time = STR_TO_DATE(#{start_time},'%Y-%m-%d  %H:%i:%s'),</if>
+            <if test="end_time != null">end_time = STR_TO_DATE(#{end_time},'%Y-%m-%d  %H:%i:%s'),</if>
+            <if test="remarks != null">remarks = #{remarks},</if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <update id="delete" parameterType="inDBJSONObject">
+        update pro_plan set
+          is_del=1
+        where id in(${id})
+    </update>
+
+    <update id="audit" parameterType="inDBJSONObject">
+        update pro_plan set
+        status=#{status_code},
+        reviewer=#{reviewer},
+        examine_time=NOW()
+        where id=#{id}
+    </update>
+
+    <select id="query" parameterType="inDBJSONObject" resultType="outDBJSONObject">
+        SELECT
+        t1.id,
+        t1.name,
+        t1.plan_num,
+        t1.figure_no,
+        t1.order_num,
+        t1.week_num,
+        t1.day_num,
+        DATE_FORMAT(t1.start_time, '%Y-%m-%d  %H:%i:%s') AS start_time,
+        DATE_FORMAT(t1.end_time, '%Y-%m-%d  %H:%i:%s') AS end_time,
+        t2.val AS status_code,
+        t2.name AS status_name,
+        t3.val AS type_code,
+        t3.name AS type_name,
+        t4.name AS workshop,
+        t4.val AS workshop_code,
+        t5.val AS me_type_code,
+        t5.name AS me_type_name,
+        t1.reviewer,
+        DATE_FORMAT(t1.examine_time, '%Y-%m-%d  %H:%i:%s') AS examine_time,
+        DATE_FORMAT(t1.create_time, '%Y-%m-%d  %H:%i:%s') AS create_time,
+        t1.remarks
+        FROM
+        (SELECT
+        *
+        FROM
+        pro_plan
+        WHERE is_del = 0
+        <if test="id != null"> and id=#{id}</if>
+        <if test="name != null"> and name like '%${name}%'</if>
+        <if test="plan_num != null">and plan_num=#{plan_num}</if>
+        <if test="status_code != null">and status=#{status_code}</if>
+        <if test="figure_no != null"> and figure_no like '%${figure_no}%'</if>
+        <if test="cre_time_start != null">and create_time >= STR_TO_DATE(#{cre_time_start},'%Y-%m-%d  %H:%i:%s')</if>
+        <if test="cre_time_end != null"> <![CDATA[ and create_time <= STR_TO_DATE(#{cre_time_end},'%Y-%m-%d  %H:%i:%s') ]]></if>
+        ORDER BY create_time DESC
+        LIMIT #{limit_start},#{limit_end}
+        ) t1
+        LEFT JOIN param_info t2
+        ON t1.status = t2.val
+        AND t2.parent_id = 5
+        AND t2.is_del = 0
+        LEFT JOIN param_info t3
+        ON t1.type = t3.val
+        AND t3.parent_id = 4
+        AND t3.is_del = 0
+        LEFT JOIN param_info t4
+        ON t1.workshop = t4.val
+        AND t4.parent_id = 1
+        AND t3.is_del = 0
+        LEFT JOIN param_info t5
+        ON t1.me_type = t5.val
+        AND t5.parent_id = 2
+        AND t5.is_del = 0
+    </select>
+
+    <select id="query_total" parameterType="inDBJSONObject" resultType="int">
+        SELECT
+        count(*)
+        FROM
+        pro_plan
+        WHERE is_del = 0
+        <if test="id != null"> and id=#{id}</if>
+        <if test="name != null"> and name like '%${name}%'</if>
+        <if test="plan_num != null">and plan_num=#{plan_num}</if>
+        <if test="status_code != null">and status=#{status_code}</if>
+        <if test="figure_no != null"> and figure_no like '%${figure_no}%'</if>
+        <if test="cre_time_start != null">and create_time >= STR_TO_DATE(#{cre_time_start},'%Y-%m-%d  %H:%i:%s')</if>
+        <if test="cre_time_end != null"> <![CDATA[ and create_time <= STR_TO_DATE(#{cre_time_end},'%Y-%m-%d  %H:%i:%s') ]]></if>
+
+    </select>
+
+
+    <insert id="insert_oper"  parameterType="inDBJSONObject">
+        INSERT INTO pro_plan_oper(
+                    workshop,
+                    next_workshop,
+                    pro_plan_id,
+                    type,
+                    create_time,
+                    is_del,
+                    remarks
+                    )VALUE(
+                    #{workshop},
+                    #{next_workshop},
+                    #{id},
+                    #{type_code},
+                    NOW(),
+                    0,
+                    #{remarks}
+                    )
+    </insert>
+
+    <select id="plan_show"  resultType="outDBJSONObject">
+        SELECT
+          t1.workshop,
+          t4.name AS next_workshop,
+          t2.name AS type_name,
+          DATE_FORMAT(t1.create_time, '%Y-%m-%d  %H:%i:%s') AS create_time ,
+          t1.remarks
+        FROM
+          (
+          SELECT * FROM pro_plan_oper
+          WHERE is_del=0
+        and pro_plan_id = #{id}
+
+        ) t1
+          LEFT JOIN param_info t2 ON t1.type=t2.val AND t2.parent_id=4
+          LEFT JOIN param_info t4 ON t1.next_workshop=t4.val AND t4.parent_id=1
+          ORDER BY t1.create_time ASC
+    </select>
+</mapper>

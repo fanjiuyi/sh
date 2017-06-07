@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.sh.mxcy.dao.impl.CommDaoImpl">
+
+    <resultMap type="com.sh.mxcy.dao.model.UserInfoModel" id="UserInfoResultMap" />
+
+    <!-- 查询用户列表 -->  
+    <select id="getUserInfoAll"   resultMap="UserInfoResultMap">
+        <![CDATA[
+            SELECT id,NAME,loginid,loginpwd,sex,age,createtime FROM user_info
+        ]]>   
+    </select>
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.sh.mxcy.dao.impl.CommDaoImpl">
+
+    <!-- 查询用户 -->
+    <select id="getUserInfo"  parameterType="inDBJSONObject" resultType="outDBJSONObject">
+        <![CDATA[
+            SELECT id,username,loginname,loginpwd,type,status,create_time,is_del,remarks
+            FROM user_info
+            WHERE loginname = #{loginname}
+            AND loginpwd = PASSWORD(${loginpwd})
+            and is_del=0
+        ]]>
+    </select>
+
+    <!-- 获取原材料数量 -->
+    <select id="getMaterialNum"  parameterType="inDBJSONObject" resultType="outDBJSONObject">
+        <![CDATA[
+          SELECT
+           IFNULL(SUM(sur_num),0) AS total
+           FROM material_stock
+          WHERE type=#{type_code}
+          and is_del=0
+          and status=1
+        ]]>
+    </select>
+
+
+</mapper>

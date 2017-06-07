@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.sh.mxcy.dao.impl.SysparmImpl">
+
+    <select id="query"  parameterType="inDBJSONObject" resultType="outDBJSONObject">
+        <![CDATA[
+            SELECT id,name,val,parent_id,remarks
+            FROM param_info
+            WHERE is_del=0
+            AND parent_id in(${parent_id})
+        ]]>
+    </select>
+
+    <insert id="insert"  parameterType="inDBJSONObject">
+      insert into
+      param_info (name,val,parent_id,remarks,create_time,is_del)
+       value(#{name},#{val},#{parent_id},#{remarks},NOW(),0)
+    </insert>
+
+
+    <update id="delete"  parameterType="inDBJSONObject">
+        update param_info set
+        is_del=1
+        where id in(${id})
+    </update>
+
+    <update id="update"  parameterType="inDBJSONObject">
+        update param_info set
+        name=#{name},
+        val=#{val},
+        remarks=#{remarks}
+        where id =#{id}
+    </update>
+
+    <select id="query_exit" parameterType="inDBJSONObject" resultType="int">
+        select count(*) from param_info
+        where name=#{name} or val=#{val}
+        and parent_id=#{parent_id}
+        and is_del=0
+    </select>
+</mapper>

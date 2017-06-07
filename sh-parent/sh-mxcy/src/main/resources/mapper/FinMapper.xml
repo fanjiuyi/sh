@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.sh.mxcy.dao.impl.FinDaoImpl">
+
+    <select id="mp_query"  parameterType="inDBJSONObject" resultType="outDBJSONObject">
+        SELECT name,figure_no,order_num  AS num,DATE_FORMAT(create_time,'%Y-%m-%d  %H:%i:%s') as create_time
+        FROM pro_plan
+        WHERE TYPE=(SELECT val FROM param_info WHERE parent_id=4 AND NAME='半成品毛坯')
+        AND (STATUS =1 OR STATUS =9)
+        AND is_del=0
+    </select>
+
+    <select id="fmp_query"  parameterType="inDBJSONObject" resultType="outDBJSONObject">
+        SELECT name,figure_no,order_num  AS num,DATE_FORMAT(create_time,'%Y-%m-%d  %H:%i:%s') as create_time
+        FROM pro_plan
+        WHERE TYPE=(SELECT val FROM param_info WHERE parent_id=4 AND NAME='半成品非毛坯')
+        AND (STATUS =1 OR STATUS =9)
+        AND is_del=0
+    </select>
+
+    <update id="out_update">
+        update fin_pro set num = num-#{num} where id=#{id}
+    </update>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="inDBJSONObject">
+       INSERT INTO fin_pro(
+            plan_num,
+            figure_no,
+            plan_id,
+            STATUS,
+            num,
+            create_time,
+            is_del
+            )(
+            SELECT
+            plan_num,
+            figure_no,
+            #{id},
+            4,
+            order_num,
+            NOW(),
+            0
+            FROM pro_plan
+            WHERE id =#{id}
+            )
+    </insert>
+
+    <insert id="insert_oper">
+        insert into  fin_pro_oper(fin_id,num,oper_type,create_time,is_del)
+        (
+        select id,num,#{oper_type},NOW(),0 from fin_pro where plan_id=#{id}
+        )
+
+    </insert>
+
+    <insert id="out_insert_oper">
+    INSERT INTO fin_pro_oper(fin_id,num,oper_type,create_time,is_del)
+    value
+    (#{id},#{num},#{oper_type}, NOW(),0 )
+    </insert>
+
+    <select id="query" parameterType="inDBJSONObject" resultType="outDBJSONObject">
+       SELECT
+        id,plan_num,figure_no,num,DATE_FORMAT(create_time,'%Y-%m-%d  %H:%i:%s') as create_time,remarks
+        FROM
+        fin_pro
+        WHERE is_del = 0
+        <if test="plan_num != null"> and plan_num like '%${plan_num}%'</if>
+        <if test="figure_no != null"> and figure_no like '%${figure_no}%'</if>
+        <if test="cre_time_start != null">and create_time >= STR_TO_DATE(#{cre_time_start},'%Y-%m-%d  %H:%i:%s')</if>
+        <if test="cre_time_end != null"> <![CDATA[ and create_time <= STR_TO_DATE(#{cre_time_end},'%Y-%m-%d  %H:%i:%s') ]]></if>
+        ORDER BY create_time DESC
+        LIMIT #{limit_start},#{limit_end}
+    </select>
+
+    <select id="query_total" parameterType="inDBJSONObject" resultType="int">
+        SELECT
+        count(*)
+        FROM
+        fin_pro
+        WHERE is_del = 0
+        <if test="plan_num != null"> and plan_num like '%${plan_num}%'</if>
+        <if test="figure_no != null"> and figure_no like '%${figure_no}%'</if>
+        <if test="cre_time_start != null">and create_time >= STR_TO_DATE(#{cre_time_start},'%Y-%m-%d  %H:%i:%s')</if>
+        <if test="cre_time_end != null"> <![CDATA[ and create_time <= STR_TO_DATE(#{cre_time_end},'%Y-%m-%d  %H:%i:%s') ]]></if>
+
+    </select>
+
+
+    <select id="out_oper_query" parameterType="inDBJSONObject" resultType="outDBJSONObject">
+        SELECT
+        t2.id,
+        t2.plan_num,
+        t2.figure_no,
+        t1.oper_type,
+        t1.num,
+        DATE_FORMAT(t1.create_time,'%Y-%m-%d  %H:%i:%s') as create_time
+        FROM
+        fin_pro_oper t1,
+        fin_pro t2
+        WHERE t1.fin_id = t2.id
+        <if test="plan_num != null"> and t2.plan_num like '%${plan_num}%'</if>
+        <if test="figure_no != null"> and t2.figure_no like '%${figure_no}%'</if>
+        <if test="oper_type != null"> and t1.oper_type=#{oper_type}</if>
+        <if test="cre_time_start != null">and t1.create_time >= STR_TO_DATE(#{cre_time_start},'%Y-%m-%d   %H:%i:%s')</if>
+        <if test="cre_time_end != null"> <![CDATA[ and t1.create_time <= STR_TO_DATE(#{cre_time_end},'%Y-%m-%d   %H:%i:%s') ]]></if>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="out_oper_query_total" parameterType="inDBJSONObject" resultType="int">
+        SELECT
+        count(*)
+        FROM
+        fin_pro_oper t1,
+        fin_pro t2
+        WHERE t1.fin_id = t2.id
+        <if test="plan_num != null"> and t2.plan_num like '%${plan_num}%'</if>
+        <if test="figure_no != null"> and t2.figure_no like '%${figure_no}%'</if>
+        <if test="oper_type != null"> and t1.oper_type=#{oper_type}</if>
+        <if test="cre_time_start != null">and create_time >= STR_TO_DATE(#{t1.cre_time_start},'%Y-%m-%d  %H:%i:%s')</if>
+        <if test="cre_time_end != null"> <![CDATA[ and create_time <= STR_TO_DATE(#{t1.cre_time_end},'%Y-%m-%d  %H:%i:%s') ]]></if>
+
+    </select>
+
+</mapper>
